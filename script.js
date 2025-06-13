@@ -32,6 +32,9 @@ class MemoryGame {
         this.combo = 0;
         this.nextPoints = 1;
         this.attempts = 0;
+        this.startTime = null;
+        this.elapsedTime = 0;
+        this.timerInterval = null;
         
         this.difficultySelection = document.getElementById('difficulty-selection');
         this.gameArea = document.getElementById('game-area');
@@ -42,6 +45,7 @@ class MemoryGame {
         this.comboSpan = document.getElementById('combo');
         this.nextPointsSpan = document.getElementById('next-points');
         this.attemptsSpan = document.getElementById('attempts');
+        this.elapsedTimeSpan = document.getElementById('elapsed-time');
         this.message = document.getElementById('message');
         this.resetBtn = document.getElementById('reset-btn');
         this.backBtn = document.getElementById('back-btn');
@@ -88,6 +92,7 @@ class MemoryGame {
         this.shuffleCards();
         this.createBoard();
         this.updateDisplay();
+        this.startTimer();
     }
     
     resetGameState() {
@@ -98,6 +103,9 @@ class MemoryGame {
         this.combo = 0;
         this.nextPoints = 1;
         this.attempts = 0;
+        this.startTime = null;
+        this.elapsedTime = 0;
+        this.stopTimer();
         this.message.textContent = '';
         this.message.className = 'message';
     }
@@ -194,7 +202,9 @@ class MemoryGame {
     
     checkGameComplete() {
         if (this.matchedPairs === 4) {
-            this.showMessage(`おめでとうございます！全てのペアを見つけました！最終スコア: ${this.score}点 (${this.attempts}回で完了)`, 'success');
+            this.stopTimer();
+            const finalTime = this.formatTime(this.elapsedTime);
+            this.showMessage(`おめでとうございます！全てのペアを見つけました！最終スコア: ${this.score}点 (${this.attempts}回、${finalTime}で完了)`, 'success');
         }
     }
     
@@ -204,6 +214,7 @@ class MemoryGame {
         this.comboSpan.textContent = this.combo;
         this.nextPointsSpan.textContent = this.nextPoints;
         this.attemptsSpan.textContent = this.attempts;
+        this.elapsedTimeSpan.textContent = this.formatTime(this.elapsedTime);
     }
     
     showMessage(text, type = '') {
@@ -218,6 +229,29 @@ class MemoryGame {
         }
     }
     
+    startTimer() {
+        this.startTime = Date.now();
+        this.elapsedTime = 0;
+        this.timerInterval = setInterval(() => {
+            this.elapsedTime = Date.now() - this.startTime;
+            this.updateDisplay();
+        }, 100); // 100ms間隔で更新
+    }
+    
+    stopTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+    }
+    
+    formatTime(milliseconds) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
     resetGame() {
         if (this.currentDifficulty) {
             this.cards = [...this.difficulties[this.currentDifficulty].cards];
@@ -225,6 +259,7 @@ class MemoryGame {
             this.shuffleCards();
             this.createBoard();
             this.updateDisplay();
+            this.startTimer();
         }
     }
 }
