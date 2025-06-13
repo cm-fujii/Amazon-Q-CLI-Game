@@ -41,11 +41,11 @@ class MemoryGame {
         this.hellMode = {
             canvas: null,
             ctx: null,
-            balls: [],
+            ball: null, // 単一のボール
+            ballStock: 0, // ボールのストック数
             paddle: { x: 0, y: 0, width: 100, height: 10 },
             cards: [],
-            animationId: null,
-            ballCount: 0
+            animationId: null
         };
         
         this.difficultySelection = document.getElementById('difficulty-selection');
@@ -106,10 +106,10 @@ class MemoryGame {
         const modeName = mode === 'hell' ? ` (地獄)` : '';
         this.currentDifficultySpan.textContent = this.difficulties[level].name + modeName;
         
-        // 地獄モードのボール数設定
+        // 地獄モードのボールストック数設定
         if (mode === 'hell') {
             const ballCounts = { easy: 5, normal: 4, hard: 3 };
-            this.hellMode.ballCount = ballCounts[level];
+            this.hellMode.ballStock = ballCounts[level];
         }
         
         this.startGame();
@@ -156,7 +156,7 @@ class MemoryGame {
             cancelAnimationFrame(this.hellMode.animationId);
             this.hellMode.animationId = null;
         }
-        this.hellMode.balls = [];
+        this.hellMode.ball = null;
         this.hellMode.cards = [];
         
         // UI表示の切り替え
@@ -278,7 +278,7 @@ class MemoryGame {
         this.elapsedTimeSpan.textContent = this.formatTime(this.elapsedTime);
         
         if (this.gameMode === 'hell') {
-            this.ballsCount.textContent = this.hellMode.balls.length;
+            this.ballsCount.textContent = this.hellMode.ballStock;
         }
     }
     
@@ -327,37 +327,28 @@ class MemoryGame {
         this.hellMode.paddle.x = canvas.width / 2 - this.hellMode.paddle.width / 2;
         this.hellMode.paddle.y = canvas.height - 30;
         
-        // カードの配置（横1列）
-        const cardWidth = 80;
+        // カードの配置（全8枚を横1列）
+        const cardWidth = 60;
         const cardHeight = 40;
-        const spacing = 10;
-        const totalWidth = this.cards.length / 2 * (cardWidth + spacing) - spacing;
+        const spacing = 8;
+        const totalWidth = this.cards.length * (cardWidth + spacing) - spacing;
         const startX = (canvas.width - totalWidth) / 2;
         
         this.hellMode.cards = [];
-        for (let i = 0; i < this.cards.length / 2; i++) {
+        for (let i = 0; i < this.cards.length; i++) {
             this.hellMode.cards.push({
                 x: startX + i * (cardWidth + spacing),
                 y: 50,
                 width: cardWidth,
                 height: cardHeight,
-                value: this.cards[i * 2],
+                value: this.cards[i],
                 flipped: false,
                 matched: false
             });
         }
         
-        // ボールの初期化
-        this.hellMode.balls = [];
-        for (let i = 0; i < this.hellMode.ballCount; i++) {
-            this.hellMode.balls.push({
-                x: canvas.width / 2 + (i - this.hellMode.ballCount / 2) * 30,
-                y: canvas.height / 2,
-                dx: (Math.random() - 0.5) * 4,
-                dy: -3,
-                radius: 8
-            });
-        }
+        // 最初のボールを発射
+        this.launchNewBall();
         
         this.hellGameLoop();
     }
@@ -368,48 +359,74 @@ class MemoryGame {
         this.hellMode.animationId = requestAnimationFrame(() => this.hellGameLoop());
     }
     
+    launchNewBall() {
+        if (this.hellMode.ballStock > 0) {
+            const canvas = this.hellMode.canvas;
+            this.hellMode.ball = {
+                x: canvas.width / 2,
+                y: canvas.height - 60,
+                dx: (Math.random() - 0.5) * 4,
+                dy: -4,
+                radius: 8
+            };
+            this.hellMode.ballStock--;
+            this.updateDisplay();
+        }
+    }
+    
     updateHellGame() {
         const canvas = this.hellMode.canvas;
+        const ball = this.hellMode.ball;
         
-        this.hellMode.balls.forEach(ball => {
-            ball.x += ball.dx;
-            ball.y += ball.dy;
-            
-            // 壁との衝突
-            if (ball.x <= ball.radius || ball.x >= canvas.width - ball.radius) {
-                ball.dx = -ball.dx;
-            }
-            if (ball.y <= ball.radius) {
+        if (!ball) return;
+        
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+        
+        // 壁との衝突
+        if (ball.x <= ball.radius || ball.x >= canvas.width - ball.radius) {
+            ball.dx = -ball.dx;
+        }
+        if (ball.y <= ball.radius) {
+            ball.dy = -ball.dy;
+        }
+        
+        // パドルとの衝突
+        if (ball.y + ball.radius >= this.hellMode.paddle.y &&
+            ball.x >= this.hellMode.paddle.x &&
+            ball.x <= this.hellMode.paddle.x + this.hellMode.paddle.width &&
+            ball.dy > 0) {
+            ball.dy = -Math.abs(ball.dy);
+            // パドルの位置によってボールの角度を変える
+            const hitPos = (ball.x - this.hellMode.paddle.x) / this.hellMode.paddle.width;
+            ball.dx = (hitPos - 0.5) * 6;
+        }
+        
+        // カードとの衝突
+        this.hellMode.cards.forEach(card => {
+            if (!card.matched &&
+                ball.x + ball.radius >= card.x && ball.x - ball.radius <= card.x + card.width &&
+                ball.y + ball.radius >= card.y && ball.y - ball.radius <= card.y + card.height) {
                 ball.dy = -ball.dy;
-            }
-            
-            // パドルとの衝突
-            if (ball.y + ball.radius >= this.hellMode.paddle.y &&
-                ball.x >= this.hellMode.paddle.x &&
-                ball.x <= this.hellMode.paddle.x + this.hellMode.paddle.width) {
-                ball.dy = -Math.abs(ball.dy);
-            }
-            
-            // カードとの衝突
-            this.hellMode.cards.forEach(card => {
-                if (!card.matched &&
-                    ball.x >= card.x && ball.x <= card.x + card.width &&
-                    ball.y >= card.y && ball.y <= card.y + card.height) {
-                    ball.dy = -ball.dy;
-                    if (!card.flipped) {
-                        card.flipped = true;
-                        this.handleHellCardFlip(card);
-                    }
+                if (!card.flipped) {
+                    card.flipped = true;
+                    this.handleHellCardFlip(card);
                 }
-            });
-            
-            // ボールが画面下に落ちた場合
-            if (ball.y > canvas.height) {
-                ball.y = canvas.height / 2;
-                ball.x = canvas.width / 2;
-                ball.dy = -3;
             }
         });
+        
+        // ボールが画面下に落ちた場合
+        if (ball.y > canvas.height) {
+            this.hellMode.ball = null;
+            // 新しいボールを発射するか、ゲーム終了チェック
+            setTimeout(() => {
+                if (this.hellMode.ballStock > 0) {
+                    this.launchNewBall();
+                } else {
+                    this.checkHellGameOver();
+                }
+            }, 1000);
+        }
     }
     
     handleHellCardFlip(card) {
@@ -453,6 +470,17 @@ class MemoryGame {
         }
     }
     
+    checkHellGameOver() {
+        if (this.matchedPairs < 4) {
+            this.stopTimer();
+            this.showMessage(`ゲームオーバー！ボールがなくなりました。最終スコア: ${this.score}点 (${this.matchedPairs}/4ペア完了)`, 'info');
+            if (this.hellMode.animationId) {
+                cancelAnimationFrame(this.hellMode.animationId);
+                this.hellMode.animationId = null;
+            }
+        }
+    }
+    
     drawHellGame() {
         const ctx = this.hellMode.ctx;
         const canvas = this.hellMode.canvas;
@@ -476,10 +504,16 @@ class MemoryGame {
             ctx.strokeRect(card.x, card.y, card.width, card.height);
             
             if (card.flipped || card.matched) {
-                ctx.fillStyle = '#333';
-                ctx.font = '20px Arial';
+                ctx.fillStyle = card.matched ? '#fff' : '#333';
+                ctx.font = '16px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(card.value, card.x + card.width/2, card.y + card.height/2 + 7);
+                ctx.fillText(card.value, card.x + card.width/2, card.y + card.height/2 + 5);
+                
+                // 難しい難易度でマッチした場合、ハイフン名称も表示
+                if (card.matched && this.currentDifficulty === 'hard' && this.hyphenNames[card.value]) {
+                    ctx.font = '8px Arial';
+                    ctx.fillText(this.hyphenNames[card.value], card.x + card.width/2, card.y + card.height - 5);
+                }
             }
         });
         
@@ -489,12 +523,18 @@ class MemoryGame {
                     this.hellMode.paddle.width, this.hellMode.paddle.height);
         
         // ボールを描画
-        this.hellMode.balls.forEach(ball => {
+        if (this.hellMode.ball) {
             ctx.fillStyle = '#ff6b6b';
             ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.arc(this.hellMode.ball.x, this.hellMode.ball.y, this.hellMode.ball.radius, 0, Math.PI * 2);
             ctx.fill();
-        });
+        }
+        
+        // ボールストック数を画面に表示
+        ctx.fillStyle = '#fff';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(`残りボール: ${this.hellMode.ballStock}`, 10, 25);
     }
     
     resetGame() {
