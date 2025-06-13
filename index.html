@@ -12,9 +12,18 @@
         <div class="difficulty-selection" id="difficulty-selection">
             <h2>難易度を選択してください</h2>
             <div class="difficulty-buttons">
-                <button class="difficulty-btn" data-level="easy">かんたん</button>
-                <button class="difficulty-btn" data-level="normal">普通</button>
-                <button class="difficulty-btn" data-level="hard">難しい</button>
+                <div class="difficulty-group">
+                    <button class="difficulty-btn" data-level="easy" data-mode="normal">かんたん</button>
+                    <button class="difficulty-btn hell-mode" data-level="easy" data-mode="hell">かんたん (地獄)</button>
+                </div>
+                <div class="difficulty-group">
+                    <button class="difficulty-btn" data-level="normal" data-mode="normal">普通</button>
+                    <button class="difficulty-btn hell-mode" data-level="normal" data-mode="hell">普通 (地獄)</button>
+                </div>
+                <div class="difficulty-group">
+                    <button class="difficulty-btn" data-level="hard" data-mode="normal">難しい</button>
+                    <button class="difficulty-btn hell-mode" data-level="hard" data-mode="hell">難しい (地獄)</button>
+                </div>
             </div>
         </div>
         <div class="game-area" id="game-area" style="display: none;">
@@ -26,6 +35,7 @@
                     <p>試行回数: <span id="attempts">0</span>回</p>
                     <p>点数: <span id="score">0</span>点</p>
                     <p>連続: <span id="combo">0</span>回 (次回: <span id="next-points">1</span>点)</p>
+                    <p id="balls-info" style="display: none;">ボール: <span id="balls-count">0</span>個</p>
                 </div>
                 <div class="info-right">
                     <button id="reset-btn">リセット</button>
@@ -35,6 +45,7 @@
             <div class="game-board" id="game-board">
                 <!-- カードがJavaScriptで動的に生成されます -->
             </div>
+            <canvas id="hell-canvas" style="display: none;"></canvas>
             <div class="message" id="message"></div>
         </div>
     </div>
