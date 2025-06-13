@@ -1,0 +1,127 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.game-info p {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#reset-btn {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#reset-btn:hover {
+    background-color: #0056b3;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card {
+    width: 100px;
+    height: 100px;
+    background-color: #4a90e2;
+    border: 2px solid #357abd;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 36px;
+    font-weight: bold;
+    color: white;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.card:hover {
+    background-color: #357abd;
+    transform: scale(1.05);
+}
+
+.card.flipped {
+    background-color: white;
+    color: #333;
+    border-color: #ddd;
+}
+
+.card.matched {
+    background-color: #28a745;
+    border-color: #1e7e34;
+    color: white;
+    cursor: default;
+}
+
+.card.matched:hover {
+    transform: none;
+}
+
+.message {
+    font-size: 18px;
+    font-weight: bold;
+    min-height: 25px;
+    color: #333;
+}
+
+.message.success {
+    color: #28a745;
+}
+
+.message.info {
+    color: #007bff;
+}
+
+@media (max-width: 480px) {
+    .game-board {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 15px;
+    }
+    
+    .card {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+    }
+}
