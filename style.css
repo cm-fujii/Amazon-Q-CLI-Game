@@ -90,9 +90,31 @@ h1 {
 }
 
 .info-left p {
-    margin: 5px 0;
-    font-size: 16px;
+    margin: 3px 0;
+    font-size: 14px;
     font-weight: bold;
+}
+
+.info-left p:first-child {
+    font-size: 16px;
+    color: #007bff;
+}
+
+#score {
+    color: #28a745;
+    font-size: 18px;
+}
+
+#attempts {
+    color: #6c757d;
+}
+
+#combo {
+    color: #dc3545;
+}
+
+#next-points {
+    color: #ffc107;
 }
 
 .info-right {

@@ -20,12 +20,20 @@ class MemoryGame {
         this.flippedCards = [];
         this.matchedPairs = 0;
         this.isProcessing = false;
+        this.score = 0;
+        this.combo = 0;
+        this.nextPoints = 1;
+        this.attempts = 0;
         
         this.difficultySelection = document.getElementById('difficulty-selection');
         this.gameArea = document.getElementById('game-area');
         this.gameBoard = document.getElementById('game-board');
         this.pairsCount = document.getElementById('pairs-count');
         this.currentDifficultySpan = document.getElementById('current-difficulty');
+        this.scoreSpan = document.getElementById('score');
+        this.comboSpan = document.getElementById('combo');
+        this.nextPointsSpan = document.getElementById('next-points');
+        this.attemptsSpan = document.getElementById('attempts');
         this.message = document.getElementById('message');
         this.resetBtn = document.getElementById('reset-btn');
         this.backBtn = document.getElementById('back-btn');
@@ -78,6 +86,10 @@ class MemoryGame {
         this.flippedCards = [];
         this.matchedPairs = 0;
         this.isProcessing = false;
+        this.score = 0;
+        this.combo = 0;
+        this.nextPoints = 1;
+        this.attempts = 0;
         this.message.textContent = '';
         this.message.className = 'message';
     }
@@ -120,6 +132,7 @@ class MemoryGame {
     
     checkMatch() {
         this.isProcessing = true;
+        this.attempts++; // 試行回数をカウント
         const [card1, card2] = this.flippedCards;
         
         if (card1.dataset.value === card2.dataset.value) {
@@ -128,10 +141,21 @@ class MemoryGame {
                 card1.classList.add('matched');
                 card2.classList.add('matched');
                 this.matchedPairs++;
+                
+                // 点数計算
+                this.score += this.nextPoints;
+                this.combo++;
+                this.nextPoints = Math.pow(2, this.combo);
+                
                 this.updateDisplay();
                 this.checkGameComplete();
                 this.flippedCards = [];
                 this.isProcessing = false;
+                
+                // コンボメッセージ表示
+                if (this.combo > 1) {
+                    this.showMessage(`${this.combo}連続！ +${this.score >= this.nextPoints/2 ? this.nextPoints/2 : this.nextPoints}点`, 'success');
+                }
             }, 500);
         } else {
             // マッチしなかった場合
@@ -142,6 +166,11 @@ class MemoryGame {
                 card2.textContent = '';
                 this.flippedCards = [];
                 this.isProcessing = false;
+                
+                // コンボリセット
+                this.combo = 0;
+                this.nextPoints = 1;
+                this.updateDisplay();
                 this.showMessage('もう一度挑戦！', 'info');
             }, 1000);
         }
@@ -149,12 +178,16 @@ class MemoryGame {
     
     checkGameComplete() {
         if (this.matchedPairs === 4) {
-            this.showMessage('おめでとうございます！全てのペアを見つけました！', 'success');
+            this.showMessage(`おめでとうございます！全てのペアを見つけました！最終スコア: ${this.score}点 (${this.attempts}回で完了)`, 'success');
         }
     }
     
     updateDisplay() {
         this.pairsCount.textContent = this.matchedPairs;
+        this.scoreSpan.textContent = this.score;
+        this.comboSpan.textContent = this.combo;
+        this.nextPointsSpan.textContent = this.nextPoints;
+        this.attemptsSpan.textContent = this.attempts;
     }
     
     showMessage(text, type = '') {
