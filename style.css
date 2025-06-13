@@ -16,35 +16,115 @@ h1 {
     margin-bottom: 20px;
 }
 
+.difficulty-selection {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.difficulty-selection h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.difficulty-btn {
+    padding: 15px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.difficulty-btn[data-level="easy"] {
+    background-color: #28a745;
+    color: white;
+}
+
+.difficulty-btn[data-level="easy"]:hover {
+    background-color: #1e7e34;
+}
+
+.difficulty-btn[data-level="normal"] {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.difficulty-btn[data-level="normal"]:hover {
+    background-color: #e0a800;
+}
+
+.difficulty-btn[data-level="hard"] {
+    background-color: #dc3545;
+    color: white;
+}
+
+.difficulty-btn[data-level="hard"]:hover {
+    background-color: #c82333;
+}
+
 .game-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding: 10px;
+    padding: 15px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.game-info p {
-    margin: 0;
-    font-size: 18px;
+.info-left {
+    text-align: left;
+}
+
+.info-left p {
+    margin: 5px 0;
+    font-size: 16px;
     font-weight: bold;
 }
 
-#reset-btn {
+.info-right {
+    display: flex;
+    gap: 10px;
+}
+
+#reset-btn, #back-btn {
     padding: 8px 16px;
-    background-color: #007bff;
-    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+#reset-btn {
+    background-color: #007bff;
+    color: white;
 }
 
 #reset-btn:hover {
     background-color: #0056b3;
+}
+
+#back-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+#back-btn:hover {
+    background-color: #545b62;
 }
 
 .game-board {
@@ -110,6 +190,27 @@ h1 {
 
 .message.info {
     color: #007bff;
+}
+
+@media (max-width: 600px) {
+    .difficulty-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .difficulty-btn {
+        width: 200px;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .info-left {
+        text-align: center;
+    }
 }
 
 @media (max-width: 480px) {

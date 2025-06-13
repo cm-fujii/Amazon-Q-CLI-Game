@@ -1,23 +1,85 @@
 class MemoryGame {
     constructor() {
-        this.cards = ['あ', 'あ', 'お', 'お', 'ぬ', 'ぬ', 'め', 'め'];
+        this.difficulties = {
+            easy: {
+                name: 'かんたん',
+                cards: ['あ', 'あ', 'お', 'お', 'ぬ', 'ぬ', 'め', 'め']
+            },
+            normal: {
+                name: '普通',
+                cards: ['ソ', 'ソ', 'ン', 'ン', 'ㇱ', 'ㇱ', 'ツ', 'ツ']
+            },
+            hard: {
+                name: '難しい',
+                cards: ['‐', '‐', '-', '-', '‑', '‑', '⁃', '⁃']
+            }
+        };
+        
+        this.currentDifficulty = null;
+        this.cards = [];
         this.flippedCards = [];
         this.matchedPairs = 0;
         this.isProcessing = false;
         
+        this.difficultySelection = document.getElementById('difficulty-selection');
+        this.gameArea = document.getElementById('game-area');
         this.gameBoard = document.getElementById('game-board');
         this.pairsCount = document.getElementById('pairs-count');
+        this.currentDifficultySpan = document.getElementById('current-difficulty');
         this.message = document.getElementById('message');
         this.resetBtn = document.getElementById('reset-btn');
+        this.backBtn = document.getElementById('back-btn');
         
         this.init();
     }
     
     init() {
+        this.setupEventListeners();
+        this.showDifficultySelection();
+    }
+    
+    setupEventListeners() {
+        // 難易度選択ボタン
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.selectDifficulty(btn.dataset.level);
+            });
+        });
+        
+        // ゲーム内ボタン
+        this.resetBtn.addEventListener('click', () => this.resetGame());
+        this.backBtn.addEventListener('click', () => this.showDifficultySelection());
+    }
+    
+    selectDifficulty(level) {
+        this.currentDifficulty = level;
+        this.cards = [...this.difficulties[level].cards];
+        this.currentDifficultySpan.textContent = this.difficulties[level].name;
+        this.startGame();
+    }
+    
+    showDifficultySelection() {
+        this.difficultySelection.style.display = 'block';
+        this.gameArea.style.display = 'none';
+        this.resetGameState();
+    }
+    
+    startGame() {
+        this.difficultySelection.style.display = 'none';
+        this.gameArea.style.display = 'block';
+        this.resetGameState();
         this.shuffleCards();
         this.createBoard();
-        this.resetBtn.addEventListener('click', () => this.resetGame());
         this.updateDisplay();
+    }
+    
+    resetGameState() {
+        this.flippedCards = [];
+        this.matchedPairs = 0;
+        this.isProcessing = false;
+        this.message.textContent = '';
+        this.message.className = 'message';
     }
     
     shuffleCards() {
@@ -108,15 +170,13 @@ class MemoryGame {
     }
     
     resetGame() {
-        this.flippedCards = [];
-        this.matchedPairs = 0;
-        this.isProcessing = false;
-        this.message.textContent = '';
-        this.message.className = 'message';
-        
-        this.shuffleCards();
-        this.createBoard();
-        this.updateDisplay();
+        if (this.currentDifficulty) {
+            this.cards = [...this.difficulties[this.currentDifficulty].cards];
+            this.resetGameState();
+            this.shuffleCards();
+            this.createBoard();
+            this.updateDisplay();
+        }
     }
 }
 

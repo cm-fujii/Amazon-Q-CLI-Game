@@ -9,14 +9,30 @@
 <body>
     <div class="container">
         <h1>神経衰弱ゲーム</h1>
-        <div class="game-info">
-            <p>ペア数: <span id="pairs-count">0</span> / 4</p>
-            <button id="reset-btn">リセット</button>
+        <div class="difficulty-selection" id="difficulty-selection">
+            <h2>難易度を選択してください</h2>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn" data-level="easy">かんたん</button>
+                <button class="difficulty-btn" data-level="normal">普通</button>
+                <button class="difficulty-btn" data-level="hard">難しい</button>
+            </div>
         </div>
-        <div class="game-board" id="game-board">
-            <!-- カードがJavaScriptで動的に生成されます -->
+        <div class="game-area" id="game-area" style="display: none;">
+            <div class="game-info">
+                <div class="info-left">
+                    <p>難易度: <span id="current-difficulty"></span></p>
+                    <p>ペア数: <span id="pairs-count">0</span> / 4</p>
+                </div>
+                <div class="info-right">
+                    <button id="reset-btn">リセット</button>
+                    <button id="back-btn">難易度選択に戻る</button>
+                </div>
+            </div>
+            <div class="game-board" id="game-board">
+                <!-- カードがJavaScriptで動的に生成されます -->
+            </div>
+            <div class="message" id="message"></div>
         </div>
-        <div class="message" id="message"></div>
     </div>
     <script src="script.js"></script>
 </body>
