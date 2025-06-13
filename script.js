@@ -15,6 +15,14 @@ class MemoryGame {
             }
         };
         
+        // ハイフンの名称マッピング
+        this.hyphenNames = {
+            '‐': 'HYPHEN',
+            '-': 'HYPHEN-MINUS',
+            '‑': 'NON-BREAKING HYPHEN',
+            '⁃': 'HYPHEN BULLET'
+        };
+        
         this.currentDifficulty = null;
         this.cards = [];
         this.flippedCards = [];
@@ -140,6 +148,14 @@ class MemoryGame {
             setTimeout(() => {
                 card1.classList.add('matched');
                 card2.classList.add('matched');
+                
+                // 難しい難易度の場合、ハイフン名称を表示
+                if (this.currentDifficulty === 'hard') {
+                    const hyphenName = this.hyphenNames[card1.dataset.value];
+                    card1.innerHTML = `${card1.dataset.value}<div class="hyphen-name">${hyphenName}</div>`;
+                    card2.innerHTML = `${card2.dataset.value}<div class="hyphen-name">${hyphenName}</div>`;
+                }
+                
                 this.matchedPairs++;
                 
                 // 点数計算
