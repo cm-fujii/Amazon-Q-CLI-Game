@@ -96,6 +96,13 @@ class MemoryGame {
                 this.hellMode.paddle.x = e.clientX - rect.left - this.hellMode.paddle.width / 2;
             }
         });
+        
+        // 地獄モード用クリック操作（ボール発射）
+        this.hellMode.canvas.addEventListener('click', (e) => {
+            if (this.gameMode === 'hell' && this.hellMode.waitingForLaunch) {
+                this.launchNewBall();
+            }
+        });
     }
     
     selectDifficulty(level, mode = 'normal') {
@@ -158,11 +165,13 @@ class MemoryGame {
         }
         this.hellMode.ball = null;
         this.hellMode.cards = [];
+        this.hellMode.waitingForLaunch = false;
         
         // 地獄モードのボールストックをリセット
         if (this.gameMode === 'hell') {
             const ballCounts = { easy: 5, normal: 4, hard: 3 };
             this.hellMode.ballStock = ballCounts[this.currentDifficulty];
+            this.hellMode.waitingForLaunch = true; // 発射待機状態に設定
         }
         
         // UI表示の切り替え
@@ -372,8 +381,8 @@ class MemoryGame {
             });
         }
         
-        // 最初のボールを発射
-        this.launchNewBall();
+        // ボール発射待機状態に設定
+        this.hellMode.waitingForLaunch = true;
         
         this.hellGameLoop();
     }
@@ -385,16 +394,17 @@ class MemoryGame {
     }
     
     launchNewBall() {
-        if (this.hellMode.ballStock > 0) {
+        if (this.hellMode.ballStock > 0 && this.hellMode.waitingForLaunch) {
             const canvas = this.hellMode.canvas;
             this.hellMode.ball = {
-                x: canvas.width / 2,
-                y: canvas.height - 60,
+                x: this.hellMode.paddle.x + this.hellMode.paddle.width / 2,  // パドルの中心X座標
+                y: this.hellMode.paddle.y - 10, // パドルの少し上から発射
                 dx: (Math.random() - 0.5) * 4,
                 dy: -4,
                 radius: 8
             };
             this.hellMode.ballStock--;
+            this.hellMode.waitingForLaunch = false; // 発射待機状態を解除
             this.updateDisplay();
         }
     }
@@ -505,10 +515,10 @@ class MemoryGame {
         // ボールが画面下に落ちた場合
         if (ball.y > canvas.height) {
             this.hellMode.ball = null;
-            // 新しいボールを発射するか、ゲーム終了チェック
+            // 次のボール発射待機状態に設定
             setTimeout(() => {
                 if (this.hellMode.ballStock > 0) {
-                    this.launchNewBall();
+                    this.hellMode.waitingForLaunch = true;
                 } else {
                     this.checkHellGameOver();
                 }
@@ -622,6 +632,14 @@ class MemoryGame {
         ctx.font = '16px Arial';
         ctx.textAlign = 'left';
         ctx.fillText(`残りボール: ${this.hellMode.ballStock}`, 10, 25);
+        
+        // 発射待機状態の表示
+        if (this.hellMode.waitingForLaunch && this.hellMode.ballStock > 0) {
+            ctx.fillStyle = '#ffff00';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('クリックでボール発射！', canvas.width / 2, canvas.height - 100);
+        }
     }
     
     resetGame() {
