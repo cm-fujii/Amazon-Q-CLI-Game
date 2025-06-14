@@ -246,10 +246,25 @@ h1 {
 }
 
 .message {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
     min-height: 25px;
     color: #333;
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    white-space: pre-line;
+    text-align: left;
+    font-family: 'Courier New', monospace;
+    line-height: 1.4;
+    max-height: 400px;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1000;
+    display: block;
+    visibility: visible;
 }
 
 .message.success {

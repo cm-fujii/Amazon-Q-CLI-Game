@@ -33,6 +33,7 @@ class MemoryGame {
         this.combo = 0;
         this.nextPoints = 1;
         this.attempts = 0;
+        this.missCount = 0; // ミス回数の累計を追加
         this.startTime = null;
         this.elapsedTime = 0;
         this.timerInterval = null;
@@ -57,12 +58,15 @@ class MemoryGame {
         this.comboSpan = document.getElementById('combo');
         this.nextPointsSpan = document.getElementById('next-points');
         this.attemptsSpan = document.getElementById('attempts');
+        this.missCountSpan = document.getElementById('miss-count');
         this.elapsedTimeSpan = document.getElementById('elapsed-time');
         this.ballsInfo = document.getElementById('balls-info');
         this.ballsCount = document.getElementById('balls-count');
         this.message = document.getElementById('message');
         this.resetBtn = document.getElementById('reset-btn');
         this.backBtn = document.getElementById('back-btn');
+        
+        console.log('Message element:', this.message);
         
         // 地獄モード用要素
         this.hellMode.canvas = document.getElementById('hell-canvas');
@@ -152,6 +156,7 @@ class MemoryGame {
         this.combo = 0;
         this.nextPoints = 1;
         this.attempts = 0;
+        this.missCount = 0; // ミス回数もリセット
         this.startTime = null;
         this.elapsedTime = 0;
         this.stopTimer();
@@ -242,10 +247,10 @@ class MemoryGame {
                 
                 this.matchedPairs++;
                 
-                // 点数計算
-                this.score += this.nextPoints;
+                // 改良されたスコア計算
                 this.combo++;
-                this.nextPoints = Math.pow(2, this.combo);
+                const matchScore = this.calculateMatchScore();
+                this.score += matchScore;
                 
                 this.updateDisplay();
                 this.checkGameComplete();
@@ -254,7 +259,7 @@ class MemoryGame {
                 
                 // コンボメッセージ表示
                 if (this.combo > 1) {
-                    this.showMessage(`${this.combo}連続！ +${this.score >= this.nextPoints/2 ? this.nextPoints/2 : this.nextPoints}点`, 'success');
+                    this.showMessage(`${this.combo}連続！ +${matchScore}点`, 'success');
                 }
             }, 500);
         } else {
@@ -267,9 +272,8 @@ class MemoryGame {
                 this.flippedCards = [];
                 this.isProcessing = false;
                 
-                // コンボリセット
-                this.combo = 0;
-                this.nextPoints = 1;
+                // ミスペナルティとコンボリセット
+                this.handleMiss();
                 this.updateDisplay();
                 this.showMessage('もう一度挑戦！', 'info');
             }, 1000);
@@ -280,8 +284,155 @@ class MemoryGame {
         if (this.matchedPairs === 4) {
             this.stopTimer();
             const finalTime = this.formatTime(this.elapsedTime);
-            this.showMessage(`おめでとうございます！全てのペアを見つけました！最終スコア: ${this.score}点 (${this.attempts}回、${finalTime}で完了)`, 'success');
+            
+            try {
+                console.log('Game completed, calculating final score...');
+                
+                // まず簡単なメッセージをテスト
+                this.showMessage('ゲームクリア！', 'success');
+                
+                // 1秒後に詳細表示
+                setTimeout(() => {
+                    // 最終スコア計算
+                    const finalScore = this.calculateFinalScore();
+                    const breakdown = this.getScoreBreakdown();
+                    
+                    console.log('Final score:', finalScore);
+                    console.log('Breakdown:', breakdown);
+                    
+                    this.score = finalScore; // 最終スコアを設定
+                    this.updateDisplay();
+                    
+                    // 詳細なスコア内訳を表示
+                    const timeInSeconds = Math.floor(this.elapsedTime / 1000);
+                    
+                    // パフォーマンス評価
+                    const totalScore = breakdown.total;
+                    let rating = '';
+                    let comment = '';
+                    
+                    if (totalScore >= 4000) {
+                        rating = '🌟 PERFECT MASTER 🌟';
+                        comment = '完璧なプレイ！神業です！';
+                    } else if (totalScore >= 3500) {
+                        rating = '⭐ EXCELLENT ⭐';
+                        comment = '素晴らしいプレイ！';
+                    } else if (totalScore >= 3000) {
+                        rating = '🔥 GREAT 🔥';
+                        comment = 'とても良いプレイ！';
+                    } else if (totalScore >= 2500) {
+                        rating = '👍 GOOD 👍';
+                        comment = '良いプレイ！';
+                    } else if (totalScore >= 2000) {
+                        rating = '📈 NICE 📈';
+                        comment = 'なかなか良いプレイ！';
+                    } else {
+                        rating = '🎯 CLEAR 🎯';
+                        comment = 'クリアおめでとう！';
+                    }
+                    
+                    // 特別な評価コメント
+                    const specialComments = [];
+                    if (timeInSeconds <= 30) specialComments.push('⚡ 超高速クリア！');
+                    if (this.missCount === 0) specialComments.push('🎯 ノーミス達成！');
+                    if (this.combo >= 4) specialComments.push('🔥 全連続コンボ！');
+                    
+                    const performanceRating = `${rating}\n${comment}${specialComments.length > 0 ? '\n' + specialComments.join(' ') : ''}`;
+                    
+                    const details = `🎉 ゲームクリア！おめでとうございます！ 🎉
+
+📊 スコア内訳
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏆 最終スコア: ${breakdown.total}点
+
+📋 詳細内訳:
+├─ 🎯 基本点数: ${breakdown.base}点
+├─ ⏱️ 時間ボーナス: ${breakdown.time}点
+│   └─ 完了時間: ${finalTime} (${timeInSeconds}秒)
+├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
+│   └─ ミス回数: ${this.missCount}回 (試行${this.attempts}回)
+└─ 🔥 コンボボーナス: ${breakdown.combo}点
+    └─ 最大連続: ${this.combo}回
+
+📈 パフォーマンス評価:
+${performanceRating}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+                    
+                    this.showMessage(details, 'success');
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error in checkGameComplete:', error);
+                this.showMessage(`ゲームクリア！最終スコア: ${this.score}点 (${this.attempts}回、${finalTime}で完了)`, 'success');
+            }
         }
+    }
+    
+    // スコア内訳表示
+    showScoreBreakdown(breakdown, finalTime) {
+        console.log('showScoreBreakdown called with:', breakdown, finalTime);
+        
+        const missCount = Math.max(0, this.attempts - 8);
+        const timeInSeconds = Math.floor(this.elapsedTime / 1000);
+        
+        const details = `
+🎉 ゲームクリア！おめでとうございます！ 🎉
+
+📊 スコア内訳
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏆 最終スコア: ${breakdown.total}点
+
+📋 詳細内訳:
+├─ 🎯 基本点数: ${breakdown.base}点
+├─ ⏱️ 時間ボーナス: ${breakdown.time}点
+│   └─ 完了時間: ${finalTime} (${timeInSeconds}秒)
+├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
+│   └─ ミス回数: ${missCount}回 (試行${this.attempts}回)
+└─ 🔥 コンボボーナス: ${breakdown.combo}点
+    └─ 最大連続: ${this.combo}回
+
+📈 パフォーマンス評価:
+${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        `.trim();
+        
+        console.log('Details to show:', details);
+        this.showMessage(details, 'success');
+    }
+    
+    // パフォーマンス評価
+    getPerformanceRating(breakdown, timeInSeconds, missCount) {
+        const totalScore = breakdown.total;
+        let rating = '';
+        let comment = '';
+        
+        if (totalScore >= 4000) {
+            rating = '🌟 PERFECT MASTER 🌟';
+            comment = '完璧なプレイ！神業です！';
+        } else if (totalScore >= 3500) {
+            rating = '⭐ EXCELLENT ⭐';
+            comment = '素晴らしいプレイ！';
+        } else if (totalScore >= 3000) {
+            rating = '🔥 GREAT 🔥';
+            comment = 'とても良いプレイ！';
+        } else if (totalScore >= 2500) {
+            rating = '👍 GOOD 👍';
+            comment = '良いプレイ！';
+        } else if (totalScore >= 2000) {
+            rating = '📈 NICE 📈';
+            comment = 'なかなか良いプレイ！';
+        } else {
+            rating = '🎯 CLEAR 🎯';
+            comment = 'クリアおめでとう！';
+        }
+        
+        // 特別な評価コメント
+        const specialComments = [];
+        if (timeInSeconds <= 30) specialComments.push('⚡ 超高速クリア！');
+        if (missCount === 0) specialComments.push('🎯 ノーミス達成！');
+        if (this.combo >= 4) specialComments.push('🔥 全連続コンボ！');
+        
+        return `${rating}\n${comment}${specialComments.length > 0 ? '\n' + specialComments.join(' ') : ''}`;
     }
     
     updateDisplay() {
@@ -290,6 +441,7 @@ class MemoryGame {
         this.comboSpan.textContent = this.combo;
         this.nextPointsSpan.textContent = this.nextPoints;
         this.attemptsSpan.textContent = this.attempts;
+        this.missCountSpan.textContent = this.missCount;
         this.elapsedTimeSpan.textContent = this.formatTime(this.elapsedTime);
         
         if (this.gameMode === 'hell') {
@@ -297,14 +449,146 @@ class MemoryGame {
         }
     }
     
-    showMessage(text, type = '') {
-        this.message.textContent = text;
-        this.message.className = `message ${type}`;
+    // 改良されたスコア計算システム
+    calculateFinalScore() {
+        const baseScore = 1000; // 基本点数
+        const timeBonus = this.calculateTimeBonus();
+        const accuracyBonus = this.calculateAccuracyBonus();
+        const comboBonus = this.calculateComboBonus();
         
-        if (text && type !== 'success') {
+        const totalScore = baseScore + timeBonus + accuracyBonus + comboBonus;
+        return Math.max(0, totalScore);
+    }
+    
+    // 時間ボーナス計算（短時間ほど高得点）
+    calculateTimeBonus() {
+        const timeInSeconds = this.elapsedTime / 1000;
+        const maxTimeBonus = 2000;
+        const optimalTime = 30; // 30秒以内なら最大ボーナス
+        
+        if (timeInSeconds <= optimalTime) {
+            return maxTimeBonus;
+        } else {
+            // 30秒を超えると徐々に減少
+            const penalty = Math.floor((timeInSeconds - optimalTime) * 20);
+            return Math.max(0, maxTimeBonus - penalty);
+        }
+    }
+    
+    // 精度ボーナス計算（ミスが少ないほど高得点）
+    calculateAccuracyBonus() {
+        const maxAccuracyBonus = 1500;
+        const penalty = this.missCount * 100; // 1ミスごとに100点減点
+        
+        return Math.max(0, maxAccuracyBonus - penalty);
+    }
+    
+    // コンボボーナス計算（連続正解ほど高得点）
+    calculateComboBonus() {
+        if (this.combo <= 1) return 0;
+        
+        // 連続正解数に応じた指数的ボーナス
+        return Math.floor(Math.pow(this.combo, 2) * 50);
+    }
+    
+    // マッチ時のスコア計算
+    calculateMatchScore() {
+        const baseMatchScore = 100;
+        const comboMultiplier = Math.max(1, this.combo * 0.5);
+        const timeMultiplier = this.getTimeMultiplier();
+        
+        const result = Math.floor(baseMatchScore * comboMultiplier * timeMultiplier);
+        return result || 100;
+    }
+    
+    // 時間による倍率計算
+    getTimeMultiplier() {
+        const timeInSeconds = (this.elapsedTime || 0) / 1000;
+        if (timeInSeconds <= 10) return 2.0;      // 10秒以内: 2倍
+        if (timeInSeconds <= 30) return 1.5;      // 30秒以内: 1.5倍
+        if (timeInSeconds <= 60) return 1.2;      // 60秒以内: 1.2倍
+        return 1.0;                               // それ以上: 等倍
+    }
+    
+    // スコア詳細を取得
+    getScoreBreakdown() {
+        const baseScore = 1000;
+        const timeBonus = this.calculateTimeBonus();
+        const accuracyBonus = this.calculateAccuracyBonus();
+        const comboBonus = this.calculateComboBonus();
+        
+        return {
+            base: baseScore,
+            time: timeBonus,
+            accuracy: accuracyBonus,
+            combo: comboBonus,
+            total: baseScore + timeBonus + accuracyBonus + comboBonus
+        };
+    }
+    
+    // ミス処理
+    handleMiss() {
+        // ミス回数をカウント
+        this.missCount++;
+        
+        // コンボリセット
+        this.combo = 0;
+        this.nextPoints = 1;
+        
+        // ミスペナルティ（スコアから減点）
+        const penalty = 50;
+        this.score = Math.max(0, this.score - penalty);
+    }
+    
+    showMessage(text, type = '') {
+        console.log('showMessage called with:', text, type);
+        
+        // 複数の方法でメッセージを表示
+        const messageElement = document.getElementById('message');
+        console.log('Message element found:', messageElement);
+        
+        if (messageElement) {
+            // 内容をクリア
+            messageElement.innerHTML = '';
+            messageElement.textContent = '';
+            
+            // 新しい内容を設定
+            messageElement.textContent = text;
+            messageElement.className = `message ${type}`;
+            
+            // スタイルを強制的に適用
+            messageElement.style.display = 'block';
+            messageElement.style.visibility = 'visible';
+            messageElement.style.opacity = '1';
+            
+            console.log('Message element after update:', {
+                textContent: messageElement.textContent,
+                className: messageElement.className,
+                style: messageElement.style.cssText
+            });
+        } else {
+            console.error('Message element not found!');
+            // フォールバック: アラートで表示
+            alert(text);
+        }
+        
+        // this.messageも更新
+        if (this.message) {
+            this.message.textContent = text;
+            this.message.className = `message ${type}`;
+        }
+        
+        // 成功メッセージ（スコア内訳など）は消さない
+        if (text && type === 'info' && !text.includes('スコア内訳') && !text.includes('最終結果')) {
             setTimeout(() => {
-                this.message.textContent = '';
-                this.message.className = 'message';
+                if (messageElement) {
+                    messageElement.textContent = '';
+                    messageElement.className = 'message';
+                }
+                if (this.message) {
+                    this.message.textContent = '';
+                    this.message.className = 'message';
+                }
             }, 2000);
         }
     }
@@ -541,16 +825,16 @@ class MemoryGame {
                     card2.matched = true;
                     this.matchedPairs++;
                     
-                    // 点数計算
-                    this.score += this.nextPoints;
+                    // 改良されたスコア計算
                     this.combo++;
-                    this.nextPoints = Math.pow(2, this.combo);
+                    const matchScore = this.calculateMatchScore();
+                    this.score += matchScore;
                     
                     this.updateDisplay();
                     this.checkGameComplete();
                     
                     if (this.combo > 1) {
-                        this.showMessage(`${this.combo}連続！ +${this.score >= this.nextPoints/2 ? this.nextPoints/2 : this.nextPoints}点`, 'success');
+                        this.showMessage(`${this.combo}連続！ +${matchScore}点`, 'success');
                     }
                 }, 500);
             } else {
@@ -558,8 +842,7 @@ class MemoryGame {
                 setTimeout(() => {
                     card1.flipped = false;
                     card2.flipped = false;
-                    this.combo = 0;
-                    this.nextPoints = 1;
+                    this.handleMiss();
                     this.updateDisplay();
                     this.showMessage('もう一度挑戦！', 'info');
                 }, 1000);
@@ -570,7 +853,40 @@ class MemoryGame {
     checkHellGameOver() {
         if (this.matchedPairs < 4) {
             this.stopTimer();
-            this.showMessage(`ゲームオーバー！ボールがなくなりました。最終スコア: ${this.score}点 (${this.matchedPairs}/4ペア完了)`, 'info');
+            const finalTime = this.formatTime(this.elapsedTime);
+            
+            try {
+                // 地獄モード用の部分クリア表示
+                const partialScore = this.calculateFinalScore();
+                const breakdown = this.getScoreBreakdown();
+                
+                const details = `💀 地獄モード - ゲームオーバー 💀
+
+📊 最終結果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏆 最終スコア: ${partialScore}点
+📋 達成度: ${this.matchedPairs}/4ペア完了
+
+📋 スコア内訳:
+├─ 🎯 基本点数: ${breakdown.base}点
+├─ ⏱️ 時間ボーナス: ${breakdown.time}点
+├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
+└─ 🔥 コンボボーナス: ${breakdown.combo}点
+
+⏱️ プレイ時間: ${finalTime}
+🎯 試行回数: ${this.attempts}回
+❌ ミス回数: ${this.missCount}回
+🔥 最大連続: ${this.combo}回
+
+${this.matchedPairs >= 2 ? '👍 健闘しました！' : '💪 次回頑張りましょう！'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+                
+                this.showMessage(details, 'info');
+            } catch (error) {
+                console.error('Error in checkHellGameOver:', error);
+                this.showMessage(`ゲームオーバー！ボールがなくなりました。最終スコア: ${this.score}点 (${this.matchedPairs}/4ペア完了)`, 'info');
+            }
+            
             if (this.hellMode.animationId) {
                 cancelAnimationFrame(this.hellMode.animationId);
                 this.hellMode.animationId = null;
