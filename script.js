@@ -393,15 +393,31 @@ class MemoryGame {
         
         if (!ball) return;
         
+        // ボールの速度制限（異常な高速移動を防ぐ）
+        const maxSpeed = 8;
+        if (Math.abs(ball.dx) > maxSpeed) {
+            ball.dx = ball.dx > 0 ? maxSpeed : -maxSpeed;
+        }
+        if (Math.abs(ball.dy) > maxSpeed) {
+            ball.dy = ball.dy > 0 ? maxSpeed : -maxSpeed;
+        }
+        
         ball.x += ball.dx;
         ball.y += ball.dy;
         
         // 壁との衝突
         if (ball.x <= ball.radius || ball.x >= canvas.width - ball.radius) {
             ball.dx = -ball.dx;
+            // ボールを壁の内側に押し戻す
+            if (ball.x <= ball.radius) {
+                ball.x = ball.radius;
+            } else {
+                ball.x = canvas.width - ball.radius;
+            }
         }
         if (ball.y <= ball.radius) {
             ball.dy = -ball.dy;
+            ball.y = ball.radius;
         }
         
         // パドルとの衝突
@@ -415,12 +431,48 @@ class MemoryGame {
             ball.dx = (hitPos - 0.5) * 6;
         }
         
-        // カードとの衝突
+        // カードとの衝突 - 改良版（確実な反射処理）
         this.hellMode.cards.forEach(card => {
             if (!card.matched &&
                 ball.x + ball.radius >= card.x && ball.x - ball.radius <= card.x + card.width &&
                 ball.y + ball.radius >= card.y && ball.y - ball.radius <= card.y + card.height) {
-                ball.dy = -ball.dy;
+                
+                // ボールがカードのどの面に当たったかを判定
+                const ballCenterX = ball.x;
+                const ballCenterY = ball.y;
+                const cardCenterX = card.x + card.width / 2;
+                const cardCenterY = card.y + card.height / 2;
+                
+                // カードの各辺からの距離を計算
+                const distanceFromLeft = Math.abs(ballCenterX - card.x);
+                const distanceFromRight = Math.abs(ballCenterX - (card.x + card.width));
+                const distanceFromTop = Math.abs(ballCenterY - card.y);
+                const distanceFromBottom = Math.abs(ballCenterY - (card.y + card.height));
+                
+                // 最も近い辺を特定
+                const minDistance = Math.min(distanceFromLeft, distanceFromRight, distanceFromTop, distanceFromBottom);
+                
+                if (minDistance === distanceFromLeft || minDistance === distanceFromRight) {
+                    // 左右の辺に当たった場合
+                    ball.dx = -ball.dx;
+                    // ボールをカードの外に押し出す
+                    if (ballCenterX < cardCenterX) {
+                        ball.x = card.x - ball.radius - 1;
+                    } else {
+                        ball.x = card.x + card.width + ball.radius + 1;
+                    }
+                } else {
+                    // 上下の辺に当たった場合
+                    ball.dy = -ball.dy;
+                    // ボールをカードの外に押し出す
+                    if (ballCenterY < cardCenterY) {
+                        ball.y = card.y - ball.radius - 1;
+                    } else {
+                        ball.y = card.y + card.height + ball.radius + 1;
+                    }
+                }
+                
+                // カードをめくる処理
                 if (!card.flipped) {
                     card.flipped = true;
                     this.handleHellCardFlip(card);
