@@ -288,8 +288,14 @@ class MemoryGame {
             try {
                 console.log('Game completed, calculating final score...');
                 
-                // まず簡単なメッセージをテスト
-                this.showMessage('ゲームクリア！', 'success');
+                // 地獄モードかどうかで表示を分ける
+                if (this.gameMode === 'hell') {
+                    // 地獄モードクリア専用表示
+                    this.showMessage('🔥 地獄モードクリア！ 🔥', 'success');
+                } else {
+                    // 通常モード表示
+                    this.showMessage('ゲームクリア！', 'success');
+                }
                 
                 // 1秒後に詳細表示
                 setTimeout(() => {
@@ -311,24 +317,48 @@ class MemoryGame {
                     let rating = '';
                     let comment = '';
                     
-                    if (totalScore >= 4000) {
-                        rating = '🌟 PERFECT MASTER 🌟';
-                        comment = '完璧なプレイ！神業です！';
-                    } else if (totalScore >= 3500) {
-                        rating = '⭐ EXCELLENT ⭐';
-                        comment = '素晴らしいプレイ！';
-                    } else if (totalScore >= 3000) {
-                        rating = '🔥 GREAT 🔥';
-                        comment = 'とても良いプレイ！';
-                    } else if (totalScore >= 2500) {
-                        rating = '👍 GOOD 👍';
-                        comment = '良いプレイ！';
-                    } else if (totalScore >= 2000) {
-                        rating = '📈 NICE 📈';
-                        comment = 'なかなか良いプレイ！';
+                    if (this.gameMode === 'hell') {
+                        // 地獄モード専用評価
+                        if (totalScore >= 4500) {
+                            rating = '👑 HELL MASTER 👑';
+                            comment = '地獄を制覇！完璧すぎる！';
+                        } else if (totalScore >= 4000) {
+                            rating = '🔥 HELL CONQUEROR 🔥';
+                            comment = '地獄モードを征服！';
+                        } else if (totalScore >= 3500) {
+                            rating = '⚡ HELL SURVIVOR ⚡';
+                            comment = '地獄を生き抜いた！';
+                        } else if (totalScore >= 3000) {
+                            rating = '💀 HELL FIGHTER 💀';
+                            comment = '地獄で戦い抜いた！';
+                        } else if (totalScore >= 2500) {
+                            rating = '🎯 HELL CHALLENGER 🎯';
+                            comment = '地獄に挑戦し勝利！';
+                        } else {
+                            rating = '🔥 HELL CLEAR 🔥';
+                            comment = '地獄モードクリア！';
+                        }
                     } else {
-                        rating = '🎯 CLEAR 🎯';
-                        comment = 'クリアおめでとう！';
+                        // 通常モード評価
+                        if (totalScore >= 4000) {
+                            rating = '🌟 PERFECT MASTER 🌟';
+                            comment = '完璧なプレイ！神業です！';
+                        } else if (totalScore >= 3500) {
+                            rating = '⭐ EXCELLENT ⭐';
+                            comment = '素晴らしいプレイ！';
+                        } else if (totalScore >= 3000) {
+                            rating = '🔥 GREAT 🔥';
+                            comment = 'とても良いプレイ！';
+                        } else if (totalScore >= 2500) {
+                            rating = '👍 GOOD 👍';
+                            comment = '良いプレイ！';
+                        } else if (totalScore >= 2000) {
+                            rating = '📈 NICE 📈';
+                            comment = 'なかなか良いプレイ！';
+                        } else {
+                            rating = '🎯 CLEAR 🎯';
+                            comment = 'クリアおめでとう！';
+                        }
                     }
                     
                     // 特別な評価コメント
@@ -336,10 +366,15 @@ class MemoryGame {
                     if (timeInSeconds <= 30) specialComments.push('⚡ 超高速クリア！');
                     if (this.missCount === 0) specialComments.push('🎯 ノーミス達成！');
                     if (this.combo >= 4) specialComments.push('🔥 全連続コンボ！');
+                    if (this.gameMode === 'hell') specialComments.push('💀 地獄モード制覇！');
                     
                     const performanceRating = `${rating}\n${comment}${specialComments.length > 0 ? '\n' + specialComments.join(' ') : ''}`;
                     
-                    const details = `🎉 ゲームクリア！おめでとうございます！ 🎉
+                    const modeTitle = this.gameMode === 'hell' ? 
+                        '🔥 地獄モード完全制覇！おめでとうございます！ 🔥' : 
+                        '🎉 ゲームクリア！おめでとうございます！ 🎉';
+                    
+                    const details = `${modeTitle}
 
 📊 スコア内訳
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -852,45 +887,114 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
     
     checkHellGameOver() {
         if (this.matchedPairs < 4) {
+            console.log('Hell mode game over triggered');
             this.stopTimer();
             const finalTime = this.formatTime(this.elapsedTime);
             
-            try {
-                // 地獄モード用の部分クリア表示
-                const partialScore = this.calculateFinalScore();
-                const breakdown = this.getScoreBreakdown();
+            // 最終スコア計算
+            const finalScore = this.calculateFinalScore();
+            const breakdown = this.getScoreBreakdown();
+            
+            console.log('Hell mode final score:', finalScore);
+            console.log('Hell mode breakdown:', breakdown);
+            
+            // 最終スコアを設定
+            this.score = finalScore;
+            this.updateDisplay();
+            
+            // アニメーション停止
+            if (this.hellMode.animationId) {
+                cancelAnimationFrame(this.hellMode.animationId);
+                this.hellMode.animationId = null;
+            }
+            
+            // 少し遅延してからメッセージ表示（アニメーション停止後）
+            setTimeout(() => {
+                const timeInSeconds = Math.floor(this.elapsedTime / 1000);
+                
+                // パフォーマンス評価（部分クリア用）
+                let rating = '';
+                let comment = '';
+                
+                if (this.matchedPairs >= 3) {
+                    rating = '🔥 GREAT EFFORT 🔥';
+                    comment = 'あと少しでした！素晴らしい健闘！';
+                } else if (this.matchedPairs >= 2) {
+                    rating = '👍 GOOD FIGHT 👍';
+                    comment = '良い戦いでした！';
+                } else if (this.matchedPairs >= 1) {
+                    rating = '💪 KEEP TRYING 💪';
+                    comment = '諦めずに頑張りました！';
+                } else {
+                    rating = '🎯 CHALLENGE ACCEPTED 🎯';
+                    comment = '地獄モードに挑戦！';
+                }
+                
+                // 特別な評価コメント
+                const specialComments = [];
+                if (timeInSeconds >= 120) specialComments.push('⏰ 長時間プレイ！');
+                if (this.missCount <= 3) specialComments.push('🎯 高精度プレイ！');
+                if (this.combo >= 2) specialComments.push('🔥 コンボ達成！');
+                
+                const performanceRating = `${rating}\n${comment}${specialComments.length > 0 ? '\n' + specialComments.join(' ') : ''}`;
                 
                 const details = `💀 地獄モード - ゲームオーバー 💀
 
 📊 最終結果
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏆 最終スコア: ${partialScore}点
+🏆 最終スコア: ${breakdown.total}点
 📋 達成度: ${this.matchedPairs}/4ペア完了
 
-📋 スコア内訳:
+📋 詳細スコア内訳:
 ├─ 🎯 基本点数: ${breakdown.base}点
 ├─ ⏱️ 時間ボーナス: ${breakdown.time}点
+│   └─ プレイ時間: ${finalTime} (${timeInSeconds}秒)
 ├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
+│   └─ ミス回数: ${this.missCount}回 (試行${this.attempts}回)
 └─ 🔥 コンボボーナス: ${breakdown.combo}点
+    └─ 最大連続: ${this.combo}回
 
-⏱️ プレイ時間: ${finalTime}
-🎯 試行回数: ${this.attempts}回
-❌ ミス回数: ${this.missCount}回
-🔥 最大連続: ${this.combo}回
+📈 パフォーマンス評価:
+${performanceRating}
 
-${this.matchedPairs >= 2 ? '👍 健闘しました！' : '💪 次回頑張りましょう！'}
+💡 地獄モードのコツ:
+• ボールの軌道を予測してカードを守る
+• 連続正解でコンボボーナスを狙う
+• 時間をかけすぎず、素早く判断する
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
                 
+                console.log('Hell mode details to show:', details);
+                
+                // 確実にメッセージを表示
+                const messageElement = document.getElementById('message');
+                if (messageElement) {
+                    // 既存のメッセージをクリア
+                    messageElement.innerHTML = '';
+                    messageElement.textContent = '';
+                    
+                    // 新しいメッセージを設定
+                    messageElement.textContent = details;
+                    messageElement.className = 'message info';
+                    
+                    // スタイルを強制的に適用
+                    messageElement.style.display = 'block';
+                    messageElement.style.visibility = 'visible';
+                    messageElement.style.opacity = '1';
+                    messageElement.style.position = 'relative';
+                    messageElement.style.zIndex = '9999';
+                    
+                    console.log('Hell mode message displayed successfully');
+                    console.log('Message element content:', messageElement.textContent.substring(0, 100) + '...');
+                } else {
+                    console.error('Message element not found!');
+                    // フォールバック: アラート表示
+                    alert(details);
+                }
+                
+                // showMessage関数も呼ぶ
                 this.showMessage(details, 'info');
-            } catch (error) {
-                console.error('Error in checkHellGameOver:', error);
-                this.showMessage(`ゲームオーバー！ボールがなくなりました。最終スコア: ${this.score}点 (${this.matchedPairs}/4ペア完了)`, 'info');
-            }
-            
-            if (this.hellMode.animationId) {
-                cancelAnimationFrame(this.hellMode.animationId);
-                this.hellMode.animationId = null;
-            }
+                
+            }, 500); // 0.5秒後に表示
         }
     }
     
