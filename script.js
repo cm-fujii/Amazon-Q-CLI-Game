@@ -349,14 +349,26 @@ class MemoryGame {
         for (let i = 0; i < this.cards.length; i++) {
             const col = i % cols;
             const row = Math.floor(i / cols);
+            const baseX = startX + col * (cardWidth + spacingX);
+            const baseY = startY + row * (cardHeight + spacingY);
+            
+            // ランダムな回転方向と速度
+            const direction = Math.random() > 0.5 ? 1 : -1; // 1=右回り, -1=左回り
+            const baseSpeed = 0.015 + Math.random() * 0.01; // 0.015〜0.025の範囲
+            
             this.hellMode.cards.push({
-                x: startX + col * (cardWidth + spacingX),
-                y: startY + row * (cardHeight + spacingY),
+                x: baseX,
+                y: baseY,
+                baseX: baseX, // 回転の中心X座標
+                baseY: baseY, // 回転の中心Y座標
                 width: cardWidth,
                 height: cardHeight,
                 value: this.cards[i],
                 flipped: false,
-                matched: false
+                matched: false,
+                angle: Math.random() * Math.PI * 2, // 初期角度もランダム
+                rotationRadius: 15, // 回転半径
+                rotationSpeed: baseSpeed * direction // ランダムな方向と速度
             });
         }
         
@@ -390,6 +402,16 @@ class MemoryGame {
     updateHellGame() {
         const canvas = this.hellMode.canvas;
         const ball = this.hellMode.ball;
+        
+        // ブロックの回転更新（右回り）
+        this.hellMode.cards.forEach(card => {
+            if (!card.matched) { // マッチしていないブロックのみ回転
+                card.angle += card.rotationSpeed;
+                // 円運動の計算
+                card.x = card.baseX + Math.cos(card.angle) * card.rotationRadius;
+                card.y = card.baseY + Math.sin(card.angle) * card.rotationRadius;
+            }
+        });
         
         if (!ball) return;
         
