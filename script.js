@@ -318,20 +318,20 @@ class MemoryGame {
                     let comment = '';
                     
                     if (this.gameMode === 'hell') {
-                        // 地獄モード専用評価
-                        if (totalScore >= 4500) {
+                        // 地獄モード専用評価（10倍スコア対応）
+                        if (totalScore >= 20000) {
                             rating = '👑 HELL MASTER 👑';
                             comment = '地獄を制覇！完璧すぎる！';
-                        } else if (totalScore >= 4000) {
+                        } else if (totalScore >= 15000) {
                             rating = '🔥 HELL CONQUEROR 🔥';
                             comment = '地獄モードを征服！';
-                        } else if (totalScore >= 3500) {
+                        } else if (totalScore >= 12000) {
                             rating = '⚡ HELL SURVIVOR ⚡';
                             comment = '地獄を生き抜いた！';
-                        } else if (totalScore >= 3000) {
+                        } else if (totalScore >= 10000) {
                             rating = '💀 HELL FIGHTER 💀';
                             comment = '地獄で戦い抜いた！';
-                        } else if (totalScore >= 2500) {
+                        } else if (totalScore >= 8000) {
                             rating = '🎯 HELL CHALLENGER 🎯';
                             comment = '地獄に挑戦し勝利！';
                         } else {
@@ -339,20 +339,20 @@ class MemoryGame {
                             comment = '地獄モードクリア！';
                         }
                     } else {
-                        // 通常モード評価
-                        if (totalScore >= 4000) {
+                        // 通常モード評価（10倍スコア対応）
+                        if (totalScore >= 20000) {
                             rating = '🌟 PERFECT MASTER 🌟';
                             comment = '完璧なプレイ！神業です！';
-                        } else if (totalScore >= 3500) {
+                        } else if (totalScore >= 15000) {
                             rating = '⭐ EXCELLENT ⭐';
                             comment = '素晴らしいプレイ！';
-                        } else if (totalScore >= 3000) {
+                        } else if (totalScore >= 12000) {
                             rating = '🔥 GREAT 🔥';
                             comment = 'とても良いプレイ！';
-                        } else if (totalScore >= 2500) {
+                        } else if (totalScore >= 10000) {
                             rating = '👍 GOOD 👍';
                             comment = '良いプレイ！';
-                        } else if (totalScore >= 2000) {
+                        } else if (totalScore >= 8000) {
                             rating = '📈 NICE 📈';
                             comment = 'なかなか良いプレイ！';
                         } else {
@@ -381,7 +381,7 @@ class MemoryGame {
 🏆 最終スコア: ${breakdown.total}点
 
 📋 詳細内訳:
-├─ 🎯 基本点数: ${breakdown.base}点
+├─ 🎯 マッチ点数: ${breakdown.base}点
 ├─ ⏱️ 時間ボーナス: ${breakdown.time}点
 │   └─ 完了時間: ${finalTime} (${timeInSeconds}秒)
 ├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
@@ -486,7 +486,8 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
     
     // 改良されたスコア計算システム
     calculateFinalScore() {
-        const baseScore = 1000; // 基本点数
+        // 実際に獲得したマッチスコアを基本点数として使用
+        const baseScore = this.score; // 現在のスコア（マッチで獲得した点数）
         const timeBonus = this.calculateTimeBonus();
         const accuracyBonus = this.calculateAccuracyBonus();
         const comboBonus = this.calculateComboBonus();
@@ -528,12 +529,12 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
     
     // マッチ時のスコア計算
     calculateMatchScore() {
-        const baseMatchScore = 100;
+        const baseMatchScore = 1000; // 100から1000に変更（10倍）
         const comboMultiplier = Math.max(1, this.combo * 0.5);
         const timeMultiplier = this.getTimeMultiplier();
         
         const result = Math.floor(baseMatchScore * comboMultiplier * timeMultiplier);
-        return result || 100;
+        return result || 1000; // デフォルト値も1000に変更
     }
     
     // 時間による倍率計算
@@ -547,7 +548,7 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
     
     // スコア詳細を取得
     getScoreBreakdown() {
-        const baseScore = 1000;
+        const baseScore = this.score; // 実際に獲得したマッチスコア
         const timeBonus = this.calculateTimeBonus();
         const accuracyBonus = this.calculateAccuracyBonus();
         const comboBonus = this.calculateComboBonus();
@@ -946,7 +947,7 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
 📋 達成度: ${this.matchedPairs}/4ペア完了
 
 📋 詳細スコア内訳:
-├─ 🎯 基本点数: ${breakdown.base}点
+├─ 🎯 マッチ点数: ${breakdown.base}点
 ├─ ⏱️ 時間ボーナス: ${breakdown.time}点
 │   └─ プレイ時間: ${finalTime} (${timeInSeconds}秒)
 ├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
