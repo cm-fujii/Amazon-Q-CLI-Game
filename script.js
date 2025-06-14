@@ -159,6 +159,12 @@ class MemoryGame {
         this.hellMode.ball = null;
         this.hellMode.cards = [];
         
+        // 地獄モードのボールストックをリセット
+        if (this.gameMode === 'hell') {
+            const ballCounts = { easy: 5, normal: 4, hard: 3 };
+            this.hellMode.ballStock = ballCounts[this.currentDifficulty];
+        }
+        
         // UI表示の切り替え
         if (this.gameMode === 'hell') {
             this.gameBoard.style.display = 'none';
@@ -549,7 +555,14 @@ class MemoryGame {
             this.cards = [...this.difficulties[this.currentDifficulty].cards];
             this.resetGameState();
             this.shuffleCards();
-            this.createBoard();
+            
+            // ゲームモードに応じて適切な初期化を実行
+            if (this.gameMode === 'hell') {
+                this.initHellMode();
+            } else {
+                this.createBoard();
+            }
+            
             this.updateDisplay();
             this.startTimer();
         }
