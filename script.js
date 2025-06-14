@@ -327,18 +327,25 @@ class MemoryGame {
         this.hellMode.paddle.x = canvas.width / 2 - this.hellMode.paddle.width / 2;
         this.hellMode.paddle.y = canvas.height - 30;
         
-        // カードの配置（全8枚を横1列）
-        const cardWidth = 60;
-        const cardHeight = 40;
-        const spacing = 8;
-        const totalWidth = this.cards.length * (cardWidth + spacing) - spacing;
+        // カードの配置（2列4個）- ブロックと同じぐらいのスキマ
+        const cardWidth = 80;
+        const cardHeight = 50;
+        const spacingX = 80; // 横間隔をブロック幅と同じに（80px）
+        const spacingY = 50; // 縦間隔をブロック高さと同じに（50px）
+        const cols = 4;
+        const rows = 2;
+        const totalWidth = cols * cardWidth + (cols - 1) * spacingX;
+        const totalHeight = rows * cardHeight + (rows - 1) * spacingY;
         const startX = (canvas.width - totalWidth) / 2;
+        const startY = 60;
         
         this.hellMode.cards = [];
         for (let i = 0; i < this.cards.length; i++) {
+            const col = i % cols;
+            const row = Math.floor(i / cols);
             this.hellMode.cards.push({
-                x: startX + i * (cardWidth + spacing),
-                y: 50,
+                x: startX + col * (cardWidth + spacingX),
+                y: startY + row * (cardHeight + spacingY),
                 width: cardWidth,
                 height: cardHeight,
                 value: this.cards[i],
