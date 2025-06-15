@@ -66,8 +66,6 @@ class MemoryGame {
         this.resetBtn = document.getElementById('reset-btn');
         this.backBtn = document.getElementById('back-btn');
         
-        console.log('Message element:', this.message);
-        
         // 地獄モード用要素
         this.hellMode.canvas = document.getElementById('hell-canvas');
         this.hellMode.ctx = this.hellMode.canvas.getContext('2d');
@@ -286,8 +284,6 @@ class MemoryGame {
             const finalTime = this.formatTime(this.elapsedTime);
             
             try {
-                console.log('Game completed, calculating final score...');
-                
                 // 地獄モードかどうかで表示を分ける
                 if (this.gameMode === 'hell') {
                     // 地獄モードクリア専用表示
@@ -302,9 +298,6 @@ class MemoryGame {
                     // 最終スコア計算
                     const finalScore = this.calculateFinalScore();
                     const breakdown = this.getScoreBreakdown();
-                    
-                    console.log('Final score:', finalScore);
-                    console.log('Breakdown:', breakdown);
                     
                     this.score = finalScore; // 最終スコアを設定
                     this.updateDisplay();
@@ -397,42 +390,9 @@ ${performanceRating}
                 }, 1000);
                 
             } catch (error) {
-                console.error('Error in checkGameComplete:', error);
                 this.showMessage(`ゲームクリア！最終スコア: ${this.score}点 (${this.attempts}回、${finalTime}で完了)`, 'success');
             }
         }
-    }
-    
-    // スコア内訳表示
-    showScoreBreakdown(breakdown, finalTime) {
-        console.log('showScoreBreakdown called with:', breakdown, finalTime);
-        
-        const missCount = Math.max(0, this.attempts - 8);
-        const timeInSeconds = Math.floor(this.elapsedTime / 1000);
-        
-        const details = `
-🎉 ゲームクリア！おめでとうございます！ 🎉
-
-📊 スコア内訳
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏆 最終スコア: ${breakdown.total}点
-
-📋 詳細内訳:
-├─ 🎯 基本点数: ${breakdown.base}点
-├─ ⏱️ 時間ボーナス: ${breakdown.time}点
-│   └─ 完了時間: ${finalTime} (${timeInSeconds}秒)
-├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
-│   └─ ミス回数: ${missCount}回 (試行${this.attempts}回)
-└─ 🔥 コンボボーナス: ${breakdown.combo}点
-    └─ 最大連続: ${this.combo}回
-
-📈 パフォーマンス評価:
-${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        `.trim();
-        
-        console.log('Details to show:', details);
-        this.showMessage(details, 'success');
     }
     
     // パフォーマンス評価
@@ -577,11 +537,8 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
     }
     
     showMessage(text, type = '') {
-        console.log('showMessage called with:', text, type);
-        
         // 複数の方法でメッセージを表示
         const messageElement = document.getElementById('message');
-        console.log('Message element found:', messageElement);
         
         if (messageElement) {
             // 内容をクリア
@@ -597,13 +554,7 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
             messageElement.style.visibility = 'visible';
             messageElement.style.opacity = '1';
             
-            console.log('Message element after update:', {
-                textContent: messageElement.textContent,
-                className: messageElement.className,
-                style: messageElement.style.cssText
-            });
         } else {
-            console.error('Message element not found!');
             // フォールバック: アラートで表示
             alert(text);
         }
@@ -888,16 +839,12 @@ ${this.getPerformanceRating(breakdown, timeInSeconds, missCount)}
     
     checkHellGameOver() {
         if (this.matchedPairs < 4) {
-            console.log('Hell mode game over triggered');
             this.stopTimer();
             const finalTime = this.formatTime(this.elapsedTime);
             
             // 最終スコア計算
             const finalScore = this.calculateFinalScore();
             const breakdown = this.getScoreBreakdown();
-            
-            console.log('Hell mode final score:', finalScore);
-            console.log('Hell mode breakdown:', breakdown);
             
             // 最終スコアを設定
             this.score = finalScore;
@@ -964,8 +911,6 @@ ${performanceRating}
 • 時間をかけすぎず、素早く判断する
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
                 
-                console.log('Hell mode details to show:', details);
-                
                 // 確実にメッセージを表示
                 const messageElement = document.getElementById('message');
                 if (messageElement) {
@@ -984,10 +929,7 @@ ${performanceRating}
                     messageElement.style.position = 'relative';
                     messageElement.style.zIndex = '9999';
                     
-                    console.log('Hell mode message displayed successfully');
-                    console.log('Message element content:', messageElement.textContent.substring(0, 100) + '...');
                 } else {
-                    console.error('Message element not found!');
                     // フォールバック: アラート表示
                     alert(details);
                 }
