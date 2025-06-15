@@ -38,6 +38,7 @@ class MemoryGame {
         this.elapsedTime = 0;
         this.timerInterval = null;
         this.timeLimit = 120000; // 2分 = 120秒 = 120000ミリ秒
+        this.gameEnded = false; // ゲーム終了状態を管理
         
         // 地獄モード用変数
         this.hellMode = {
@@ -94,6 +95,11 @@ class MemoryGame {
         
         // 地獄モード用マウス操作
         this.hellMode.canvas.addEventListener('mousemove', (e) => {
+            // ゲーム終了時はパドル操作を無効化
+            if (this.gameEnded) {
+                return;
+            }
+            
             if (this.gameMode === 'hell') {
                 const rect = this.hellMode.canvas.getBoundingClientRect();
                 this.hellMode.paddle.x = e.clientX - rect.left - this.hellMode.paddle.width / 2;
@@ -102,6 +108,11 @@ class MemoryGame {
         
         // 地獄モード用クリック操作（ボール発射）
         this.hellMode.canvas.addEventListener('click', (e) => {
+            // ゲーム終了時はボール発射を無効化
+            if (this.gameEnded) {
+                return;
+            }
+            
             if (this.gameMode === 'hell' && this.hellMode.waitingForLaunch) {
                 this.launchNewBall();
             }
@@ -159,6 +170,7 @@ class MemoryGame {
         this.startTime = null;
         this.elapsedTime = 0;
         this.timeLimit = 120000; // 2分制限をリセット時にも設定
+        this.gameEnded = false; // ゲーム終了状態をリセット
         this.stopTimer();
         this.message.textContent = '';
         this.message.className = 'message';
@@ -211,6 +223,11 @@ class MemoryGame {
     }
     
     flipCard(cardElement) {
+        // ゲーム終了時はカードをめくれない
+        if (this.gameEnded) {
+            return;
+        }
+        
         if (this.isProcessing || 
             cardElement.classList.contains('flipped') || 
             cardElement.classList.contains('matched') ||
@@ -282,6 +299,7 @@ class MemoryGame {
     
     checkGameComplete() {
         if (this.matchedPairs === 4) {
+            this.gameEnded = true; // ゲーム終了状態を設定
             this.stopTimer();
             const finalTime = this.formatTime(this.elapsedTime);
             
@@ -609,6 +627,7 @@ ${performanceRating}
     
     // 時間切れ処理
     handleTimeUp() {
+        this.gameEnded = true; // ゲーム終了状態を設定
         this.stopTimer();
         
         // 地獄モードのアニメーションも停止
@@ -750,6 +769,11 @@ ${performanceRating}
     }
     
     hellGameLoop() {
+        // ゲーム終了時はアニメーションを停止
+        if (this.gameEnded) {
+            return;
+        }
+        
         this.updateHellGame();
         this.drawHellGame();
         this.hellMode.animationId = requestAnimationFrame(() => this.hellGameLoop());
@@ -772,6 +796,11 @@ ${performanceRating}
     }
     
     updateHellGame() {
+        // ゲーム終了時は物理演算を停止
+        if (this.gameEnded) {
+            return;
+        }
+        
         const canvas = this.hellMode.canvas;
         const ball = this.hellMode.ball;
         
@@ -889,6 +918,11 @@ ${performanceRating}
     }
     
     handleHellCardFlip(card) {
+        // ゲーム終了時はカードをめくれない
+        if (this.gameEnded) {
+            return;
+        }
+        
         // 既にめくられているカードがあるかチェック
         const flippedCards = this.hellMode.cards.filter(c => c.flipped && !c.matched);
         
@@ -930,6 +964,7 @@ ${performanceRating}
     
     checkHellGameOver() {
         if (this.matchedPairs < 4) {
+            this.gameEnded = true; // ゲーム終了状態を設定
             this.stopTimer();
             const finalTime = this.formatTime(this.elapsedTime);
             
