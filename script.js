@@ -37,6 +37,7 @@ class MemoryGame {
         this.startTime = null;
         this.elapsedTime = 0;
         this.timerInterval = null;
+        this.timeLimit = 120000; // 2分 = 120秒 = 120000ミリ秒
         
         // 地獄モード用変数
         this.hellMode = {
@@ -157,6 +158,7 @@ class MemoryGame {
         this.missCount = 0; // ミス回数もリセット
         this.startTime = null;
         this.elapsedTime = 0;
+        this.timeLimit = 120000; // 2分制限をリセット時にも設定
         this.stopTimer();
         this.message.textContent = '';
         this.message.className = 'message';
@@ -290,7 +292,7 @@ class MemoryGame {
                     this.showMessage('🔥 地獄モードクリア！ 🔥', 'success');
                 } else {
                     // 通常モード表示
-                    this.showMessage('ゲームクリア！', 'success');
+                    this.showMessage('🎉 時間内クリア！ 🎉', 'success');
                 }
                 
                 // 1秒後に詳細表示
@@ -304,6 +306,7 @@ class MemoryGame {
                     
                     // 詳細なスコア内訳を表示
                     const timeInSeconds = Math.floor(this.elapsedTime / 1000);
+                    const remainingSeconds = Math.floor((this.timeLimit - this.elapsedTime) / 1000);
                     
                     // パフォーマンス評価
                     const totalScore = breakdown.total;
@@ -356,7 +359,7 @@ class MemoryGame {
                     
                     // 特別な評価コメント
                     const specialComments = [];
-                    if (timeInSeconds <= 30) specialComments.push('⚡ 超高速クリア！');
+                    if (remainingSeconds >= 90) specialComments.push('⚡ 超高速クリア！');
                     if (this.missCount === 0) specialComments.push('🎯 ノーミス達成！');
                     if (this.combo >= 4) specialComments.push('🔥 全連続コンボ！');
                     if (this.gameMode === 'hell') specialComments.push('💀 地獄モード制覇！');
@@ -365,7 +368,7 @@ class MemoryGame {
                     
                     const modeTitle = this.gameMode === 'hell' ? 
                         '🔥 地獄モード完全制覇！おめでとうございます！ 🔥' : 
-                        '🎉 ゲームクリア！おめでとうございます！ 🎉';
+                        '🎉 時間内クリア！おめでとうございます！ 🎉';
                     
                     const details = `${modeTitle}
 
@@ -376,7 +379,7 @@ class MemoryGame {
 📋 詳細内訳:
 ├─ 🎯 マッチ点数: ${breakdown.base}点
 ├─ ⏱️ 時間ボーナス: ${breakdown.time}点
-│   └─ 完了時間: ${finalTime} (${timeInSeconds}秒)
+│   └─ 完了時間: ${finalTime} (残り${remainingSeconds}秒)
 ├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
 │   └─ ミス回数: ${this.missCount}回 (試行${this.attempts}回)
 └─ 🔥 コンボボーナス: ${breakdown.combo}点
@@ -437,7 +440,10 @@ ${performanceRating}
         this.nextPointsSpan.textContent = this.nextPoints;
         this.attemptsSpan.textContent = this.attempts;
         this.missCountSpan.textContent = this.missCount;
-        this.elapsedTimeSpan.textContent = this.formatTime(this.elapsedTime);
+        
+        // 残り時間を表示
+        const remainingTime = Math.max(0, this.timeLimit - this.elapsedTime);
+        this.elapsedTimeSpan.textContent = this.formatTime(remainingTime);
         
         if (this.gameMode === 'hell') {
             this.ballsCount.textContent = this.hellMode.ballStock;
@@ -456,19 +462,17 @@ ${performanceRating}
         return Math.max(0, totalScore);
     }
     
-    // 時間ボーナス計算（短時間ほど高得点）
+    // 時間ボーナス計算（残り時間が多いほど高得点）
     calculateTimeBonus() {
-        const timeInSeconds = this.elapsedTime / 1000;
+        const remainingTime = Math.max(0, this.timeLimit - this.elapsedTime);
+        const remainingSeconds = remainingTime / 1000;
         const maxTimeBonus = 2000;
-        const optimalTime = 30; // 30秒以内なら最大ボーナス
         
-        if (timeInSeconds <= optimalTime) {
-            return maxTimeBonus;
-        } else {
-            // 30秒を超えると徐々に減少
-            const penalty = Math.floor((timeInSeconds - optimalTime) * 20);
-            return Math.max(0, maxTimeBonus - penalty);
-        }
+        // 残り時間に応じてボーナス計算（残り時間が多いほど高得点）
+        const timeRatio = remainingSeconds / 120; // 120秒が最大
+        const bonus = Math.floor(maxTimeBonus * timeRatio);
+        
+        return Math.max(0, bonus);
     }
     
     // 精度ボーナス計算（ミスが少ないほど高得点）
@@ -585,6 +589,13 @@ ${performanceRating}
         this.elapsedTime = 0;
         this.timerInterval = setInterval(() => {
             this.elapsedTime = Date.now() - this.startTime;
+            
+            // 時間切れチェック
+            if (this.elapsedTime >= this.timeLimit) {
+                this.handleTimeUp();
+                return;
+            }
+            
             this.updateDisplay();
         }, 100); // 100ms間隔で更新
     }
@@ -594,6 +605,86 @@ ${performanceRating}
             clearInterval(this.timerInterval);
             this.timerInterval = null;
         }
+    }
+    
+    // 時間切れ処理
+    handleTimeUp() {
+        this.stopTimer();
+        
+        // 地獄モードのアニメーションも停止
+        if (this.gameMode === 'hell' && this.hellMode.animationId) {
+            cancelAnimationFrame(this.hellMode.animationId);
+            this.hellMode.animationId = null;
+        }
+        
+        // 最終スコア計算
+        const finalScore = this.calculateFinalScore();
+        const breakdown = this.getScoreBreakdown();
+        this.score = finalScore;
+        this.updateDisplay();
+        
+        // 時間切れメッセージ表示
+        setTimeout(() => {
+            const timeInSeconds = Math.floor(this.elapsedTime / 1000);
+            
+            // パフォーマンス評価（時間切れ用）
+            let rating = '';
+            let comment = '';
+            
+            if (this.matchedPairs >= 3) {
+                rating = '⏰ TIME UP - GREAT EFFORT ⏰';
+                comment = 'あと少しでした！時間が足りませんでした！';
+            } else if (this.matchedPairs >= 2) {
+                rating = '⏰ TIME UP - GOOD PROGRESS ⏰';
+                comment = '良いペースでした！もう少し時間があれば！';
+            } else if (this.matchedPairs >= 1) {
+                rating = '⏰ TIME UP - KEEP TRYING ⏰';
+                comment = '時間切れ！次回はもっと素早く！';
+            } else {
+                rating = '⏰ TIME UP - CHALLENGE AGAIN ⏰';
+                comment = '時間切れ！もう一度挑戦してみましょう！';
+            }
+            
+            // 特別な評価コメント
+            const specialComments = [];
+            if (this.missCount <= 2) specialComments.push('🎯 高精度プレイ！');
+            if (this.combo >= 2) specialComments.push('🔥 コンボ達成！');
+            if (this.gameMode === 'hell') specialComments.push('💀 地獄モード挑戦！');
+            
+            const performanceRating = `${rating}\n${comment}${specialComments.length > 0 ? '\n' + specialComments.join(' ') : ''}`;
+            
+            const modeTitle = this.gameMode === 'hell' ? 
+                '💀 地獄モード - 時間切れ 💀' : 
+                '⏰ 時間切れ - ゲーム終了 ⏰';
+            
+            const details = `${modeTitle}
+
+📊 最終結果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏆 最終スコア: ${breakdown.total}点
+📋 達成度: ${this.matchedPairs}/4ペア完了
+⏰ 制限時間: 2分00秒で終了
+
+📋 詳細スコア内訳:
+├─ 🎯 マッチ点数: ${breakdown.base}点
+├─ ⏱️ 時間ボーナス: ${breakdown.time}点
+│   └─ プレイ時間: 02:00 (120秒)
+├─ 🎯 精度ボーナス: ${breakdown.accuracy}点
+│   └─ ミス回数: ${this.missCount}回 (試行${this.attempts}回)
+└─ 🔥 コンボボーナス: ${breakdown.combo}点
+    └─ 最大連続: ${this.combo}回
+
+📈 パフォーマンス評価:
+${performanceRating}
+
+💡 次回のコツ:
+• より素早い判断を心がける
+• パターンを覚えて効率的にプレイ
+• コンボを狙って高得点を目指す
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+            
+            this.showMessage(details, 'info');
+        }, 500);
     }
     
     formatTime(milliseconds) {
