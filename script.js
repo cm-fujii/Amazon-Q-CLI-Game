@@ -332,20 +332,20 @@ class MemoryGame {
                     let comment = '';
                     
                     if (this.gameMode === 'hell') {
-                        // 地獄モード専用評価（10倍スコア対応）
-                        if (totalScore >= 20000) {
+                        // 地獄モード専用評価（最高タイムボーナス30000pt対応）
+                        if (totalScore >= 70000) {
                             rating = '👑 HELL MASTER 👑';
                             comment = '地獄を制覇！完璧すぎる！';
-                        } else if (totalScore >= 15000) {
+                        } else if (totalScore >= 60000) {
                             rating = '🔥 HELL CONQUEROR 🔥';
                             comment = '地獄モードを征服！';
-                        } else if (totalScore >= 12000) {
+                        } else if (totalScore >= 50000) {
                             rating = '⚡ HELL SURVIVOR ⚡';
                             comment = '地獄を生き抜いた！';
-                        } else if (totalScore >= 10000) {
+                        } else if (totalScore >= 40000) {
                             rating = '💀 HELL FIGHTER 💀';
                             comment = '地獄で戦い抜いた！';
-                        } else if (totalScore >= 8000) {
+                        } else if (totalScore >= 30000) {
                             rating = '🎯 HELL CHALLENGER 🎯';
                             comment = '地獄に挑戦し勝利！';
                         } else {
@@ -353,20 +353,20 @@ class MemoryGame {
                             comment = '地獄モードクリア！';
                         }
                     } else {
-                        // 通常モード評価（10倍スコア対応）
-                        if (totalScore >= 20000) {
+                        // 通常モード評価（最高タイムボーナス30000pt対応）
+                        if (totalScore >= 70000) {
                             rating = '🌟 PERFECT MASTER 🌟';
                             comment = '完璧なプレイ！神業です！';
-                        } else if (totalScore >= 15000) {
+                        } else if (totalScore >= 60000) {
                             rating = '⭐ EXCELLENT ⭐';
                             comment = '素晴らしいプレイ！';
-                        } else if (totalScore >= 12000) {
+                        } else if (totalScore >= 50000) {
                             rating = '🔥 GREAT 🔥';
                             comment = 'とても良いプレイ！';
-                        } else if (totalScore >= 10000) {
+                        } else if (totalScore >= 40000) {
                             rating = '👍 GOOD 👍';
                             comment = '良いプレイ！';
-                        } else if (totalScore >= 8000) {
+                        } else if (totalScore >= 30000) {
                             rating = '📈 NICE 📈';
                             comment = 'なかなか良いプレイ！';
                         } else {
@@ -377,7 +377,11 @@ class MemoryGame {
                     
                     // 特別な評価コメント
                     const specialComments = [];
-                    if (remainingSeconds >= 90) specialComments.push('⚡ 超高速クリア！');
+                    if (remainingSeconds >= 110) specialComments.push('⚡ 神速クリア！(30000pt)');
+                    else if (remainingSeconds >= 100) specialComments.push('🚀 超高速クリア！(27000pt)');
+                    else if (remainingSeconds >= 90) specialComments.push('💨 高速クリア！(24000pt)');
+                    else if (remainingSeconds >= 80) specialComments.push('🏃 速いクリア！(21000pt)');
+                    else if (remainingSeconds >= 70) specialComments.push('⏰ 良いペース！(18000pt)');
                     if (this.missCount === 0) specialComments.push('🎯 ノーミス達成！');
                     if (this.combo >= 4) specialComments.push('🔥 全連続コンボ！');
                     if (this.gameMode === 'hell') specialComments.push('💀 地獄モード制覇！');
@@ -484,13 +488,48 @@ ${performanceRating}
     calculateTimeBonus() {
         const remainingTime = Math.max(0, this.timeLimit - this.elapsedTime);
         const remainingSeconds = remainingTime / 1000;
-        const maxTimeBonus = 2000;
         
-        // 残り時間に応じてボーナス計算（残り時間が多いほど高得点）
-        const timeRatio = remainingSeconds / 120; // 120秒が最大
-        const bonus = Math.floor(maxTimeBonus * timeRatio);
-        
-        return Math.max(0, bonus);
+        // 10秒ごとの段階的タイムボーナスシステム（3倍増強）
+        if (remainingSeconds >= 110) {
+            // 残り110秒以上（10秒以内でクリア）
+            return 30000;
+        } else if (remainingSeconds >= 100) {
+            // 残り100秒以上（20秒以内でクリア）
+            return 27000;
+        } else if (remainingSeconds >= 90) {
+            // 残り90秒以上（30秒以内でクリア）
+            return 24000;
+        } else if (remainingSeconds >= 80) {
+            // 残り80秒以上（40秒以内でクリア）
+            return 21000;
+        } else if (remainingSeconds >= 70) {
+            // 残り70秒以上（50秒以内でクリア）
+            return 18000;
+        } else if (remainingSeconds >= 60) {
+            // 残り60秒以上（60秒以内でクリア）
+            return 15000;
+        } else if (remainingSeconds >= 50) {
+            // 残り50秒以上（70秒以内でクリア）
+            return 12000;
+        } else if (remainingSeconds >= 40) {
+            // 残り40秒以上（80秒以内でクリア）
+            return 9000;
+        } else if (remainingSeconds >= 30) {
+            // 残り30秒以上（90秒以内でクリア）
+            return 6000;
+        } else if (remainingSeconds >= 20) {
+            // 残り20秒以上（100秒以内でクリア）
+            return 4500;
+        } else if (remainingSeconds >= 10) {
+            // 残り10秒以上（110秒以内でクリア）
+            return 3000;
+        } else if (remainingSeconds > 0) {
+            // 残り10秒未満（ギリギリクリア）
+            return 1500;
+        } else {
+            // 時間切れ
+            return 0;
+        }
     }
     
     // 精度ボーナス計算（ミスが少ないほど高得点）
