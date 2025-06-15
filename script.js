@@ -136,6 +136,13 @@ class MemoryGame {
         this.startGame();
     }
     
+    // 現在の難易度名を取得
+    getDifficultyDisplayName() {
+        const difficultyName = this.difficulties[this.currentDifficulty].name;
+        const modeName = this.gameMode === 'hell' ? ' (地獄モード)' : '';
+        return difficultyName + modeName;
+    }
+    
     showDifficultySelection() {
         this.difficultySelection.style.display = 'block';
         this.gameArea.style.display = 'none';
@@ -397,6 +404,7 @@ class MemoryGame {
 📊 スコア内訳
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏆 最終スコア: ${breakdown.total}点
+🎮 難易度: ${this.getDifficultyDisplayName()}
 
 📋 詳細内訳:
 ├─ 🎯 マッチ点数: ${breakdown.base}点
@@ -720,6 +728,7 @@ ${performanceRating}
 📊 最終結果
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏆 最終スコア: ${breakdown.total}点
+🎮 難易度: ${this.getDifficultyDisplayName()}
 📋 達成度: ${this.matchedPairs}/4ペア完了
 ⏰ 制限時間: 2分00秒で終了
 
@@ -1056,7 +1065,9 @@ ${performanceRating}
 📊 最終結果
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏆 最終スコア: ${breakdown.total}点
+🎮 難易度: ${this.getDifficultyDisplayName()}
 📋 達成度: ${this.matchedPairs}/4ペア完了
+💀 ボール切れでゲームオーバー
 
 📋 詳細スコア内訳:
 ├─ 🎯 マッチ点数: ${breakdown.base}点
